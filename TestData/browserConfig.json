@@ -1,0 +1,28 @@
+{
+  "headless": false,
+  "projects": [
+    { "name": "Chrome", "browser": "Chrome" },
+    { "name": "Firefox", "browser": "Firefox" },
+    { "name": "Edge", "browser": "Edge" },
+    { "name": "WebKit", "browser": "WebKit" }
+  ],
+  "chrome": {
+    "arguments": [
+      "--disable-features=PasswordLeakDetection"
+    ]
+  },
+  "edge": {
+    "arguments": [
+      "--disable-features=PasswordLeakDetection"
+    ]
+  },
+  "firefox": {
+    "arguments": [],
+    "preferences": {
+      "signon.rememberSignons": false
+    }
+  },
+  "webkit": {
+    "arguments": []
+  }
+}
