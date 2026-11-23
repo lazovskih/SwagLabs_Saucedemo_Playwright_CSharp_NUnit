@@ -1,10 +1,10 @@
 name: Playwright NUnit CI
 
-# Required GitHub Repository / Environment Secrets:
+# Required GitHub Environment ("TEST") Secrets / Variables:
 #   - STANDARD_USER
 #   - LOCKED_OUT_USER
 #   - DEMO_PASSWORD
-#   - URL (can also be configured as a Repository / Environment Variable)
+#   - URL
 
 on:
   push:
@@ -55,6 +55,7 @@ jobs:
     name: Playwright NUnit E2E Tests (${{ matrix.browserName }})
     needs: quality_gate
     runs-on: ubuntu-latest
+    environment: TEST
     strategy:
       fail-fast: false
       matrix:
@@ -95,9 +96,9 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory "${{ github.workspace }}/${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}"
         env:
-          STANDARD_USER: ${{ secrets.STANDARD_USER }}
-          LOCKED_OUT_USER: ${{ secrets.LOCKED_OUT_USER }}
-          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          STANDARD_USER: ${{ secrets.STANDARD_USER || vars.STANDARD_USER }}
+          LOCKED_OUT_USER: ${{ secrets.LOCKED_OUT_USER || vars.LOCKED_OUT_USER }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD || vars.DEMO_PASSWORD }}
           URL: ${{ secrets.URL || vars.URL }}
           BROWSER_PROJECT: ${{ matrix.browserName }}
           HEADLESS: "true"

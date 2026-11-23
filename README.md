@@ -56,7 +56,7 @@ Triggers on `push`, `pull_request`, and manual `workflow_dispatch` runs (with au
 2. **Job 2 — `playwright_test` (`Playwright NUnit E2E Tests`)**:
     - Runs after `quality_gate` succeeds across a multi-browser matrix (`Chrome`, `Firefox`, `Edge`, `WebKit`) with `fail-fast: false`.
     - Installs `ffmpeg`, Playwright browser binaries, and OS dependencies (`playwright.ps1 install`).
-    - Executes the NUnit test suite in headless mode (`HEADLESS: "true"`, `BROWSER_PROJECT: ${{ matrix.browserName }}`) using repository/environment secrets: `STANDARD_USER`, `LOCKED_OUT_USER`, `DEMO_PASSWORD`, and `URL` (`URL` can also be set as a repository/environment variable).
+    - Executes the NUnit test suite in headless mode (`HEADLESS: "true"`, `BROWSER_PROJECT: ${{ matrix.browserName }}`) using the **`TEST`** GitHub Environment secrets/variables: `STANDARD_USER`, `LOCKED_OUT_USER`, `DEMO_PASSWORD`, and `URL`.
     - Publishes `.trx` test results as GitHub Check Runs (`dorny/test-reporter@v3`), writes a Cobertura code coverage summary to the job summary (`GITHUB_STEP_SUMMARY`), and uploads all test reports, coverage XML, full-page screenshots, Playwright trace `.zip` archives, and failure video recordings (`.webm`) as `TestArtifacts-<Browser>` workflow artifacts (`actions/upload-artifact@v4`).
 
 ### Azure DevOps ([`azure-pipelines.yml`](azure-pipelines.yml))
