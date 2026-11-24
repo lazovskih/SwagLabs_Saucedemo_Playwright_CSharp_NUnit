@@ -1,0 +1,147 @@
+name: Playwright NUnit CI
+
+# Required GitHub Environment ("TEST") Secrets / Variables:
+#   - STANDARD_USER
+#   - LOCKED_OUT_USER
+#   - DEMO_PASSWORD
+#   - URL
+
+on:
+  push:
+    branches:
+      - "**"
+
+  pull_request:
+    branches:
+      - "**"
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+env:
+  BUILD_CONFIGURATION: Release
+  DOTNET_SDK_VERSION: 8.0.x
+  ARTIFACTS_DIRECTORY: TestResults
+
+jobs:
+  quality_gate:
+    name: Static Analysis & Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK ${{ env.DOTNET_SDK_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Build & Run Roslyn Static Analysis (WarnAsError)
+        run: dotnet build --no-restore --configuration "${{ env.BUILD_CONFIGURATION }}" -warnaserror
+
+  playwright_test:
+    name: Playwright NUnit E2E Tests (${{ matrix.browserName }})
+    needs: quality_gate
+    runs-on: ubuntu-latest
+    environment: TEST
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browserName: Chrome
+            playwrightBrowser: chrome
+          - browserName: Firefox
+            playwrightBrowser: firefox
+          - browserName: Edge
+            playwrightBrowser: msedge
+          - browserName: WebKit
+            playwrightBrowser: webkit
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK ${{ env.DOTNET_SDK_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK_VERSION }}
+
+      - name: Build Test Project
+        run: dotnet build --configuration "${{ env.BUILD_CONFIGURATION }}"
+
+      - name: Install Playwright Browser & Dependencies (${{ matrix.browserName }})
+        run: |
+          pwsh "bin/${{ env.BUILD_CONFIGURATION }}/net8.0/playwright.ps1" install ffmpeg
+          pwsh "bin/${{ env.BUILD_CONFIGURATION }}/net8.0/playwright.ps1" install --with-deps "${{ matrix.playwrightBrowser }}"
+
+      - name: Run NUnit Playwright Tests Headless (${{ matrix.browserName }})
+        run: |
+          dotnet test \
+            --no-build \
+            --configuration "${{ env.BUILD_CONFIGURATION }}" \
+            --logger "trx;LogFileName=TestResults-${{ matrix.browserName }}.trx" \
+            --logger "html;LogFileName=TestReport-${{ matrix.browserName }}.html" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory "${{ github.workspace }}/${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}"
+        env:
+          STANDARD_USER: ${{ secrets.STANDARD_USER || vars.STANDARD_USER }}
+          LOCKED_OUT_USER: ${{ secrets.LOCKED_OUT_USER || vars.LOCKED_OUT_USER }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD || vars.DEMO_PASSWORD }}
+          URL: ${{ secrets.URL || vars.URL }}
+          BROWSER_PROJECT: ${{ matrix.browserName }}
+          HEADLESS: "true"
+          COLLECT_ALL_ARTIFACTS: "true"
+          PLAYWRIGHT_ARTIFACTS_DIR: "${{ github.workspace }}/${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}/PlaywrightArtifacts"
+
+      - name: Publish NUnit TRX Test Results (${{ matrix.browserName }})
+        uses: dorny/test-reporter@v3
+        if: ${{ success() || failure() }}
+        continue-on-error: true
+        with:
+          name: Playwright NUnit E2E Tests (${{ matrix.browserName }})
+          path: ${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}/**/*.trx
+          reporter: dotnet-trx
+
+      - name: Publish Code Coverage Summary (${{ matrix.browserName }})
+        if: ${{ success() || failure() }}
+        shell: pwsh
+        run: |
+          $coverageFiles = Get-ChildItem -Path "${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}" -Filter "coverage.cobertura.xml" -Recurse -ErrorAction SilentlyContinue
+          if (-not $coverageFiles) {
+            Write-Host "No Cobertura coverage file found."
+            exit 0
+          }
+          $invariant = [System.Globalization.CultureInfo]::InvariantCulture
+          "### Code Coverage (${{ matrix.browserName }})" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "| Metric | Covered | Total | Rate |" >> $env:GITHUB_STEP_SUMMARY
+          "| --- | ---: | ---: | ---: |" >> $env:GITHUB_STEP_SUMMARY
+          foreach ($file in $coverageFiles) {
+            [xml]$xml = Get-Content -Path $file.FullName
+            $cov = $xml.coverage
+            $lineRate = [math]::Round([double]::Parse($cov.'line-rate', $invariant) * 100, 2)
+            $branchRate = [math]::Round([double]::Parse($cov.'branch-rate', $invariant) * 100, 2)
+            "| Lines | $($cov.'lines-covered') | $($cov.'lines-valid') | $lineRate% |" >> $env:GITHUB_STEP_SUMMARY
+            "| Branches | $($cov.'branches-covered') | $($cov.'branches-valid') | $branchRate% |" >> $env:GITHUB_STEP_SUMMARY
+          }
+
+      - name: Publish All Test & Playwright Artifacts (${{ matrix.browserName }})
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TestArtifacts-${{ matrix.browserName }}
+          path: ${{ env.ARTIFACTS_DIRECTORY }}/${{ matrix.browserName }}
+          if-no-files-found: warn
+
