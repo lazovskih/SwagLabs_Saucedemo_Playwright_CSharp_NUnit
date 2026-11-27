@@ -137,7 +137,7 @@ public class T7_CartPage(BrowserProjectConfig browserProject) : BaseTest(browser
             "Total is not correct.");
     }
 
-    [Test(Description = "7.3 Cart page: Verifies item name, quantity and description")]
+    [Test(Description = "7.3 Completes checkout and verifies item name, price, quantity and description")]
     public async Task T7_3_Verifies_item_name_image_and_description()
     {
         // Add product items
@@ -206,6 +206,142 @@ public class T7_CartPage(BrowserProjectConfig browserProject) : BaseTest(browser
               CheckoutStepTwoPage.GetItemQuantity(product),
               $"Item quantity of '{product.Name}' is matching the expected quantity")
               .ToHaveTextAsync("1");
+        }
+    }
+
+    [Test(Description = "7.4 Verify item page shows correct status of selected items")]
+    public async Task T7_4_Verifies_item_page_shows_correct_status_of_selected_items()
+    {
+        // Add product items
+        Product[] productsList = [Products[0], Products[1], Products[2], Products[3]];
+        await InventoryPage.AddProductsToCartAsync(productsList);
+        var productsListCount = productsList.Length;
+        string productsListCountStr = productsListCount.ToString();
+
+        // Open shopping cart
+        await InventoryPage.ViewCartAsync();
+
+        // Verify cart page title
+        await Expect(CartPage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CartPage.PageTitleText);
+
+        // Verify cart badge count on 'Shopping Cart' page
+        await Expect(CartPage.CartBadge, "Confirm cart badge count is valid on 'Shopping Cart' page")
+            .ToHaveTextAsync(productsListCountStr);
+
+        // Verify list of cart items count
+        await Expect(CartPage.InventoryItems, "Confirm list of cart items count is valid")
+            .ToHaveCountAsync(productsListCount);
+
+        // Start checkout
+        await CartPage.StartCheckoutAsync();
+
+        // Verify checkout step one page title
+        await Expect(CheckoutStepOnePage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CheckoutStepOnePage.PageTitleText);
+
+        // Fill shipping information and verify values are populated
+        await CheckoutStepOnePage.FillShippingInformationAsync(ShippingInfo[1]);
+        await Expect(CheckoutStepOnePage.FirstNameField, "Confirm first name field is populated").ToHaveValueAsync(ShippingInfo[1].FirstName);
+        await Expect(CheckoutStepOnePage.LastNameField, "Confirm last name field is populated").ToHaveValueAsync(ShippingInfo[1].LastName);
+        await Expect(CheckoutStepOnePage.PostalCodeField, "Confirm postal code field is populated").ToHaveValueAsync(ShippingInfo[1].PostalCode);
+
+        // Click continue checkout
+        await CheckoutStepOnePage.ContinueCheckoutAsync();
+
+        // Verify checkout step two page title
+        await Expect(CheckoutStepTwoPage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CheckoutStepTwoPage.PageTitleText);
+
+        // Verify cart page title
+        await Expect(CheckoutStepTwoPage.PageTitle, "Confirm cart page title is valid").ToHaveTextAsync(CheckoutStepTwoPage.PageTitleText);
+
+        // Loop through specific products
+        foreach (var product in productsList)
+        {
+            // Open product item page
+            await CheckoutStepTwoPage.OpenItemPageAsync(product);
+            await Expect(InventoryItemPage.BackToProductsButton, "Confirm 'Inventory Item' page is opened").ToBeVisibleAsync();
+
+            await Expect(InventoryItemPage.GetButton(product, CartButtonAction.Add), "Confirm Add button is NOT present for items removed from cart").ToBeHiddenAsync();
+            await Expect(InventoryItemPage.GetButton(product, CartButtonAction.Remove), "Confirm Remove button is present for items removed from cart").ToBeVisibleAsync();
+
+            // Open shopping cart
+            await InventoryPage.ViewCartAsync();
+        }
+    }
+
+    [Test(Description = "7.5 Checkout page: Open selected item verifies item name, price and description")]
+    public async Task T7_5_Verifies_item_page_shows_correct_status_of_selected_items()
+    {
+        // Add product items
+        await InventoryPage.AddProductsToCartAsync(Products);
+
+        // Open shopping cart
+        await InventoryPage.ViewCartAsync();
+
+        // Verify cart page title
+        await Expect(CartPage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CartPage.PageTitleText);
+
+        // Start checkout
+        await CartPage.StartCheckoutAsync();
+
+        // Verify checkout step one page title
+        await Expect(CheckoutStepOnePage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CheckoutStepOnePage.PageTitleText);
+
+        // Fill shipping information and verify values are populated
+        await CheckoutStepOnePage.FillShippingInformationAsync(ShippingInfo[1]);
+        await Expect(CheckoutStepOnePage.FirstNameField, "Confirm first name field is populated").ToHaveValueAsync(ShippingInfo[1].FirstName);
+        await Expect(CheckoutStepOnePage.LastNameField, "Confirm last name field is populated").ToHaveValueAsync(ShippingInfo[1].LastName);
+        await Expect(CheckoutStepOnePage.PostalCodeField, "Confirm postal code field is populated").ToHaveValueAsync(ShippingInfo[1].PostalCode);
+
+        // Click continue checkout
+        await CheckoutStepOnePage.ContinueCheckoutAsync();
+
+        // Verify checkout step two page title
+        await Expect(CheckoutStepTwoPage.PageTitle, "Confirm page title is valid")
+            .ToHaveTextAsync(CheckoutStepTwoPage.PageTitleText);
+
+        // Verify cart page title
+        await Expect(CheckoutStepTwoPage.PageTitle, "Confirm cart page title is valid").ToHaveTextAsync(CheckoutStepTwoPage.PageTitleText);
+
+        // Loop through all products
+        foreach (var product in Products)
+        {
+            // Open product item page
+            await CheckoutStepTwoPage.OpenItemPageAsync(product);
+
+            await Expect(
+                InventoryItemPage.GetItemName(product),
+                $"Item name '{product.Name}' is matching the expected name")
+                .ToHaveTextAsync(product.Name);
+
+            await Expect(
+                InventoryItemPage.GetItemPrice(product),
+                $"Item price of '{product.Name}' is matching the expected price")
+                .ToHaveTextAsync(FormattableString.Invariant($"${product.Price:F2}"));
+
+            await Expect(
+                InventoryItemPage.GetItemImage(product),
+                $"Item image of '{product.Name}' is matching the expected image URL")
+                .ToHaveAttributeAsync("src", product.ImageUrl);
+
+            await Expect(
+                InventoryItemPage.GetItemDescription(product),
+                $"Item description of '{product.Name}' is matching the expected description")
+                .ToHaveTextAsync(product.Description);
+
+            var addToCartButton = InventoryPage.GetButton(product, CartButtonAction.Add);
+            var removeButton = InventoryPage.GetButton(product, CartButtonAction.Remove);
+
+            // Verify changed state
+            await Expect(addToCartButton, $"Add button for product: '{product.Name}' is hidden").ToBeHiddenAsync();
+            await Expect(removeButton, $"Remove button for product: '{product.Name}' is visible").ToBeVisibleAsync();
+
+            // Navigate back to checkout step two page
+            await CheckoutStepTwoPage.OpenAsync();
         }
     }
 }

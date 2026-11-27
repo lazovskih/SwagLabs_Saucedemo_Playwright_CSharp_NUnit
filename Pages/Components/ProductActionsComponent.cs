@@ -48,13 +48,12 @@ public sealed class ProductActionsComponent(IPage page)
     /// (<c>inventory-item-&lt;id&gt;-img</c>) or the Inventory Item detail page (<c>item-&lt;id&gt;-img</c>).
     /// </summary>
     /// <param name="product">Target product data object.</param>
-    public ILocator GetImage(Product product)
+    public ILocator GetItemImage(Product product)
     {
         ArgumentNullException.ThrowIfNull(product);
-
         var productId = Helpers.GetProductId(product);
-        return _page.Locator($"[data-test='inventory-item-{productId}-img']")
-            .Or(_page.Locator($"[data-test='item-{productId}-img']"));
+        return _page.Locator($"[data-test='item-{productId}-img']")
+            .Or(_page.Locator($"[data-test='inventory-item-{productId}-img']"));
     }
 
     /// <summary>
@@ -123,13 +122,6 @@ public sealed class ProductActionsComponent(IPage page)
     /// <param name="product">Optional product data object.</param>
     /// <returns>Product item description locator.</returns>
     public ILocator GetItemDescription(Product? product = null) => GetProductItem(product).Locator(ItemDescriptionSelector);
-
-    /// <summary>
-    /// Retrieves the item image locator for the specified product, or all item images when <paramref name="product"/> is <see langword="null"/>.
-    /// </summary>
-    /// <param name="product">Optional product data object.</param>
-    /// <returns>Product item image locator.</returns>
-    public ILocator GetItemImage(Product? product = null) => GetProductItem(product).Locator(ItemImageSelector);
 
     /// <summary>
     /// Retrieves the item quantity locator for the specified product, or all item quantities when <paramref name="product"/> is <see langword="null"/>.

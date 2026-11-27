@@ -160,7 +160,7 @@ public class T2_InventoryPage(BrowserProjectConfig browserProject) : BaseTest(br
             await Expect(InventoryPage.GetButton(productsList[i], CartButtonAction.Add), "Confirm Add button is present for items removed from cart").ToBeVisibleAsync();
         }
     }
-    
+
     [Test(Description = "2.6 Inventory page: Adds selected products to the cart and verifies item page")]
     public async Task T2_6_Adds_selected_products_to_the_cart_and_verifies_item_page()
     {
@@ -187,8 +187,8 @@ public class T2_InventoryPage(BrowserProjectConfig browserProject) : BaseTest(br
         }
     }
 
-    [Test(Description = "2.7 Inventory page: Verifies item name, image and description")]
-    public async Task T2_7_Verifies_item_name_image_and_description()
+    [Test(Description = "2.7 Inventory page: Verifies item name, price image and description")]
+    public async Task T2_7_Verifies_item_name_price_image_and_description()
     {
         // Loop through all products
         foreach (var product in Products)
@@ -204,7 +204,7 @@ public class T2_InventoryPage(BrowserProjectConfig browserProject) : BaseTest(br
                 .ToHaveTextAsync(FormattableString.Invariant($"${product.Price:F2}"));
 
             await Expect(
-                InventoryPage.GetImage(product),
+                InventoryPage.GetItemImage(product),
                 $"Item image of '{product.Name}' is matching the expected image URL")
                 .ToHaveAttributeAsync("src", product.ImageUrl);
 

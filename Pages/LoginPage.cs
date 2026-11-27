@@ -14,7 +14,7 @@ public class LoginPage : BasePage
     public const string ErrorMessageText = "Epic sadface: Username and password do not match any user in this service";
     public const string NoAccessMessageText = "Epic sadface: You can only access '{pageUrl}' when you are logged in.";
     public const string LockedOutMessageText = "Epic sadface: Sorry, this user has been locked out.";
-    public ILocator ErrorMessage ; 
+    public ILocator ErrorMessage;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LoginPage"/> class.
@@ -42,8 +42,8 @@ public class LoginPage : BasePage
         await _passwordField.FillAsync(password);
 
         await _loginButton.ClickAsync();
-     return   new InventoryPage(Page);
-      }
+        return new InventoryPage(Page);
+    }
 
     /// <summary>
     /// Retrieves the text of the login error message banner.

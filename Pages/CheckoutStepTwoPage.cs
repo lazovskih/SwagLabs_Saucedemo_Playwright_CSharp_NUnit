@@ -9,7 +9,7 @@ namespace SwagLabs_Saucedemo_Playwright_CSharp_NUnit.Pages;
 /// Page Object representing the Checkout Step Two (<c>/checkout-step-two.html</c>) overview page.
 /// </summary>
 /// <param name="page">The Playwright page instance.</param>
-public class CheckoutStepTwoPage(IPage page)
+public sealed class CheckoutStepTwoPage(IPage page)
     : InternalPage(page, "/checkout-step-two.html", "Checkout: Overview")
 {
     private ProductActionsComponent ProductActions { get; } = new(page);

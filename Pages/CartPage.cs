@@ -7,7 +7,7 @@ namespace SwagLabs_Saucedemo_Playwright_CSharp_NUnit.Pages;
 /// <summary>
 /// Page Object representing the Swag Labs Shopping Cart (<c>/cart.html</c>) page.
 /// </summary>
-public class CartPage(IPage page)
+public sealed class CartPage(IPage page)
     : InternalPage(page, "/cart.html", "Your Cart")
 {
     private ProductActionsComponent ProductActions { get; } = new(page);

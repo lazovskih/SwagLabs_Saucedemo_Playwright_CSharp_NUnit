@@ -12,14 +12,14 @@ public class T3_InventoryItemPage(BrowserProjectConfig browserProject) : BaseTes
     {
         // Verify cart link on 'Products' page has no numbers when opened first time
         await Expect(InventoryPage.CartLink, "Confirm cart link is empty on 'Products' page").ToHaveTextAsync(string.Empty);
-        
+
         Product[] productsList = [Products[0], Products[2], Products[4]];
 
         foreach (var product in productsList)
         {
             // Open the product detail page for the selected product
             await InventoryPage.OpenItemPageAsync(product);
-            
+
             // Add products to cart
             await InventoryItemPage.AddProductToCartAsync(product);
 
@@ -41,7 +41,7 @@ public class T3_InventoryItemPage(BrowserProjectConfig browserProject) : BaseTes
 
         // Verify total cart items count on the page
         await Expect(CartPage.InventoryItems, "Confirm total cart items count.").ToHaveCountAsync(productsList.Length);
-        
+
         // Verify specific products present on the shopping cart page
         foreach (var product in productsList)
         {
@@ -238,7 +238,7 @@ public class T3_InventoryItemPage(BrowserProjectConfig browserProject) : BaseTes
                 .ToHaveTextAsync(FormattableString.Invariant($"${product.Price:F2}"));
 
             await Expect(
-                InventoryItemPage.GetImage(product),
+                InventoryItemPage.GetItemImage(product),
                 $"Item image of '{product.Name}' is matching the expected image URL")
                 .ToHaveAttributeAsync("src", product.ImageUrl);
 
