@@ -7,7 +7,7 @@ namespace SwagLabs_Saucedemo_Playwright_CSharp_NUnit.Pages;
 /// <summary>
 /// Page Object representing the Swag Labs Products (Inventory) page.
 /// </summary>
-public class InventoryPage(IPage page)
+public sealed class InventoryPage(IPage page)
     : InternalPage(page, "/inventory.html", "Products")
 {
     private ProductActionsComponent ProductActions { get; } = new(page);
@@ -30,7 +30,7 @@ public class InventoryPage(IPage page)
     /// (<c>inventory-item-&lt;id&gt;-img</c>) or the Inventory Item detail page (<c>item-&lt;id&gt;-img</c>).
     /// </summary>
     /// <param name="product">Target product data object.</param>
-    public ILocator GetImage(Product product) => ProductActions.GetImage(product);
+    public ILocator GetItemImage(Product product) => ProductActions.GetItemImage(product);
 
     /// <summary>
     /// Adds a specified product to the shopping cart and waits for the 'Remove' button to become visible.
@@ -83,13 +83,6 @@ public class InventoryPage(IPage page)
     /// <returns>Product item name locator.</returns>
     public ILocator GetItemName(Product? product = null) => ProductActions.GetItemName(product);
 
-    /// <summary>
-    /// Retrieves the item image locator for the specified product, or all item images when <paramref name="product"/> is <see langword="null"/>.
-    /// </summary>
-    /// <param name="product">Optional product data object.</param>
-    /// <returns>Product item image locator.</returns>
-    public ILocator GetItemImage(Product? product = null) => ProductActions.GetItemImage(product);
-    
     /// <summary>
     /// Opens the selected product's detail page by clicking its item name link.
     /// </summary>

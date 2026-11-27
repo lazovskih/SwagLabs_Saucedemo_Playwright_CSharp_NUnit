@@ -7,7 +7,7 @@ namespace SwagLabs_Saucedemo_Playwright_CSharp_NUnit.Pages;
 /// Page Object representing the Checkout Step One (<c>/checkout-step-one.html</c>) customer information page.
 /// </summary>
 /// <param name="page">The Playwright page instance.</param>
-public class CheckoutStepOnePage(IPage page)
+public sealed class CheckoutStepOnePage(IPage page)
     : InternalPage(page, "/checkout-step-one.html", "Checkout: Your Information")
 {
     public readonly ILocator FirstNameField = page.Locator("[data-test='firstName']");

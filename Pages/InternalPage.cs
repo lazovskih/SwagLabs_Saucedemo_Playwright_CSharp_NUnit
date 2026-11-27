@@ -9,12 +9,12 @@ namespace SwagLabs_Saucedemo_Playwright_CSharp_NUnit.Pages;
 /// <param name="page">The Playwright page instance.</param>
 /// <param name="pageUrl">Optional relative URL path for the page.</param>
 /// <param name="pageTitleText">Optional expected title text for the page.</param>
-public class InternalPage(IPage page, string pageUrl = "", string pageTitleText = "")
+public abstract class InternalPage(IPage page, string pageUrl = "", string pageTitleText = "")
     : BasePage(page, pageUrl, pageTitleText)
 {
     // Sidebar menu locators
     private readonly ILocator _mainMenuButton = page.Locator("#react-burger-menu-btn");
-    private readonly ILocator _sideMenu = page.Locator(".bm-menu");
+    private readonly ILocator _sideMenu = page.Locator(".bm-menu-wrap[aria-hidden=\"false\"]");
     private readonly ILocator _allItemsMenu = page.Locator("[data-test='inventory-sidebar-link']");
     private readonly ILocator _aboutMenu = page.Locator("[data-test='about-sidebar-link']");
     private readonly ILocator _logoutMenu = page.Locator("[data-test='logout-sidebar-link']");
